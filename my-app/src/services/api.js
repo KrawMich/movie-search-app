@@ -1,15 +1,26 @@
 const API_KEY = "b24c4db5";
 
 export async function searchMovies(query) {
-  const response = await fetch(
-    `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
-  );
+  try {
+    const response = await fetch(
+      `https://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
+    );
 
-  const data = await response.json();
+    if (!response.ok) {
+      throw new Error("Network error. Please try again.");
+    }
 
-  if (data.Response === "False") {
-    throw new Error(data.Error);
+    const data = await response.json();
+
+    if (data.Response === "False") {
+      throw new Error(data.Error);
+    }
+
+    return data;
+  } catch (error) {
+    if (error.name === "TypeError") {
+      throw new Error("No internet connection.");
+    }
+    throw error;
   }
-
-  return data;
 }

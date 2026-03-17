@@ -1,6 +1,7 @@
 import SearchBar from "./components/SearchBar";
 import { useState } from "react";
 import { searchMovies } from "./services/api";
+import MovieList from "./components/MovieList";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -13,18 +14,17 @@ export default function App() {
     const cleanedQuery = query.trim();
     if (!cleanedQuery) return;
 
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
+      const [data] = await Promise.all([
+        searchMovies(cleanedQuery),
+        new Promise((resolve) => setTimeout(resolve, 500)),
+      ]);
 
-      const minDelay = new Promise((resolve) => setTimeout(resolve, 500));
-      const dataPromise = searchMovies(cleanedQuery);
-
-      const [data] = await Promise.all([dataPromise, minDelay]);
-
-      const uniqueMovies = (data.Search || []).filter(
-        (movie, index, array) =>
-          index === array.findIndex((item) => item.imdbID === movie.imdbID)
+      const uniqueMovies = Array.from(
+        new Map((data.Search || []).map((m) => [m.imdbID, m])).values()
       );
 
       setSearchQuery(cleanedQuery);
@@ -78,21 +78,7 @@ export default function App() {
               No results found for: {searchQuery}
             </div>
           ) : (
-            <ul className="space-y-3">
-              {movies.map((movie) => (
-                <li
-                  key={movie.imdbID}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <p className="font-semibold text-slate-800">
-                    {movie.Title}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {movie.Year}
-                  </p>
-                </li>
-              ))}
-            </ul>
+              <MovieList movies={movies} />
           )}
         </section>
       </div>
