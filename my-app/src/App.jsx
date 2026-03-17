@@ -6,16 +6,36 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSearch = async () => {
     const cleanedQuery = query.trim();
-
     if (!cleanedQuery) return;
 
-    const data = await searchMovies(cleanedQuery);
+    try {
+      setLoading(true);
+      setError(null);
 
-    setSearchQuery(cleanedQuery);
-    setMovies(data.Search || []);
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 500));
+      const dataPromise = searchMovies(cleanedQuery);
+
+      const [data] = await Promise.all([dataPromise, minDelay]);
+
+      const uniqueMovies = (data.Search || []).filter(
+        (movie, index, array) =>
+          index === array.findIndex((item) => item.imdbID === movie.imdbID)
+      );
+
+      setSearchQuery(cleanedQuery);
+      setMovies(uniqueMovies);
+    } catch (err) {
+      setSearchQuery(cleanedQuery);
+      setMovies([]);
+      setError(err.message || "Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,16 +49,27 @@ export default function App() {
           Search for your favorite movies and discover new ones.
         </p>
 
-        <SearchBar 
+        <SearchBar
           query={query}
           onQueryChange={setQuery}
           onSearch={handleSearch}
         />
 
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-semibold text-slate-800">Results</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-800">
+            Results
+          </h2>
 
-          {!searchQuery ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
+              <p className="mt-3 text-sm text-slate-500">Loading...</p>
+            </div>
+          ) : error ? (
+            <div className="rounded-xl border border-dashed border-red-300 bg-red-50 px-4 py-10 text-center text-sm text-red-600">
+              {error}
+            </div>
+          ) : !searchQuery ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
               Search for a movie or series
             </div>
@@ -53,8 +84,12 @@ export default function App() {
                   key={movie.imdbID}
                   className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                 >
-                  <p className="font-semibold text-slate-800">{movie.Title}</p>
-                  <p className="text-sm text-slate-500">{movie.Year}</p>
+                  <p className="font-semibold text-slate-800">
+                    {movie.Title}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {movie.Year}
+                  </p>
                 </li>
               ))}
             </ul>
