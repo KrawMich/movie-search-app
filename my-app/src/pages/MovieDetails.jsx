@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { fetchMovieDetails } from "../services/api";
 
@@ -7,6 +7,11 @@ export default function MovieDetails() {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const formatValue = (value) => {
+    return value && value !== "N/A" ? value : "Not available";
+  };
 
   useEffect(() => {
     const getMovie = async () => {
@@ -27,6 +32,12 @@ export default function MovieDetails() {
   }, [id]);
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-10">
+      <button
+      onClick={() => navigate(-1)}
+      className="mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow"
+    >
+      ← Back
+    </button>
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
@@ -54,11 +65,11 @@ export default function MovieDetails() {
               <h1 className="text-3xl font-bold text-slate-800">{movie.Title}</h1>
 
               <p className="mt-2 text-sm text-slate-500">
-                {movie.Year} • {movie.Runtime} • {movie.Genre}
+                {formatValue(movie.Year)} • {formatValue(movie.Runtime)} • {formatValue(movie.Genre)}
               </p>
 
               <p className="mt-4 text-sm leading-6 text-slate-700">
-                {movie.Plot}
+                {formatValue(movie.Plot)}
               </p>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -67,7 +78,7 @@ export default function MovieDetails() {
                     Director
                   </p>
                   <p className="mt-1 text-sm font-medium text-slate-700">
-                    {movie.Director}
+                    {formatValue(movie.Director)}
                   </p>
                 </div>
 
@@ -76,7 +87,7 @@ export default function MovieDetails() {
                     Actors
                   </p>
                   <p className="mt-1 text-sm font-medium text-slate-700">
-                    {movie.Actors}
+                    {formatValue(movie.Actors)}
                   </p>
                 </div>
 
@@ -85,7 +96,7 @@ export default function MovieDetails() {
                     IMDb Rating
                   </p>
                   <p className="mt-1 text-sm font-medium text-slate-700">
-                    {movie.imdbRating}
+                    {formatValue(movie.imdbRating)}
                   </p>
                 </div>
 
@@ -94,7 +105,7 @@ export default function MovieDetails() {
                     Language
                   </p>
                   <p className="mt-1 text-sm font-medium text-slate-700">
-                    {movie.Language}
+                    {formatValue(movie.Language)}
                   </p>
                 </div>
               </div>
